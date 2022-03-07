@@ -1,14 +1,16 @@
 {
   "name": "clarity",
-  "version": "12.0.12",
   "private": true,
   "engines": {
     "yarn": "please-use-npm",
     "node": ">=14.15.0",
-    "npm": ">=6.14.4"
+    "npm": ">=7.5.6"
   },
+  "workspaces": [
+    "projects/*"
+  ],
   "scripts": {
-    "build": "npm-run-all _build:angular _build:ui _build:schematics _build:demo",
+    "build": "npm-run-all _build:angular _build:ui _build:demo",
     "build:ci": "npm-run-all clean lint build test public-api:check",
     "clean": "rimraf dist",
     "commit": "cz -s",
@@ -21,16 +23,11 @@
     "public-api:check": "api-extractor run",
     "public-api:update": "api-extractor run -l",
     "start": "ng serve clr-demo",
-    "test": "npm-run-all _test:angular _test:schematics",
+    "test": "ng test clr-angular --source-map=false --watch=false",
     "test:watch": "npm run --silent _test:angular -- --watch",
     "_build:angular": "ng build clr-angular --configuration production",
     "_build:angular:watch": "npm run --silent build:angular -- --watch",
     "_build:demo": "ng build clr-demo --configuration production",
-    "_build:schematics": "npm-run-all _build:schematics_clr:compile _build:schematics_clr:copy _build:schematics_test:compile _build:schematics_test:copy",
-    "_build:schematics_clr:compile": "tsc -p ./projects/schematics/tsconfig.json",
-    "_build:schematics_clr:copy": "cpy \"**/*.json\" ./../../../dist/clr-angular/schematics --cwd=./projects/schematics/src --parents",
-    "_build:schematics_test:compile": "tsc -p ./projects/schematics/tsconfig.test.json",
-    "_build:schematics_test:copy": "cpy \"**/*.json\" ./../../../dist/schematics --cwd=./projects/schematics/src --parents",
     "_build:ui:css": "sass ./projects/ui/src:./dist/clr-ui --precision=8",
     "_build:ui:prefix": "postcss ./dist/clr-ui/clr-ui.css ./dist/clr-ui/clr-ui-dark.css --use autoprefixer -d ./dist/clr-ui",
     "_build:ui:optimize": "csso ./dist/clr-ui/clr-ui.css -o ./dist/clr-ui/clr-ui.min.css -s file --no-restructure & csso ./dist/clr-ui/clr-ui-dark.css -o ./dist/clr-ui/clr-ui-dark.min.css -s file --no-restructure",
@@ -49,37 +46,12 @@
     "_lint:styles": "stylelint \"**/*.{css,scss,sass}\"",
     "_lint:styles:fix": "npm run --silent _lint:styles -- --fix",
     "_lint:styles:changed": "npm run --silent _exec-changed -- \"**/*.{css,scss,sass}\" stylelint",
-    "_lint:styles:changed:fix": "npm run --silent _lint:styles:changed -- --fix",
-    "_test:angular": "ng test clr-angular --source-map=false --watch=false",
-    "_test:schematics": "jasmine \"./dist/schematics/**/*.spec.js\""
-  },
-  "dependencies": {
-    "@angular/animations": "~12.0.5",
-    "@angular/common": "~12.0.5",
-    "@angular/compiler": "~12.0.5",
-    "@angular/core": "~12.0.5",
-    "@angular/forms": "~12.0.5",
-    "@angular/platform-browser": "~12.0.5",
-    "@angular/platform-browser-dynamic": "~12.0.5",
-    "@angular/router": "~12.0.5",
-    "@cds/angular": "^5.1.1",
-    "@cds/core": "^5.1.1",
-    "rxjs": "~6.6.0",
-    "tslib": "^2.0.0",
-    "zone.js": "~0.11.4"
+    "_lint:styles:changed:fix": "npm run --silent _lint:styles:changed -- --fix"
   },
   "devDependencies": {
     "@amanda-mitchell/semantic-release-npm-multiple": "2.17.0",
-    "@angular-devkit/build-angular": "~12.0.5",
-    "@angular-devkit/core": "~12.0.5",
-    "@angular-devkit/schematics": "~12.0.5",
-    "@angular/cli": "~12.0.5",
-    "@angular/compiler-cli": "~12.0.5",
     "@commitlint/cz-commitlint": "^16.1.0",
     "@microsoft/api-extractor": "7.19.4",
-    "@schematics/angular": "~11.2.4",
-    "@types/jasmine": "~3.6.0",
-    "@types/node": "^14.0.0",
     "@typescript-eslint/eslint-plugin": "^5.9.0",
     "@typescript-eslint/parser": "^5.9.0",
     "commitizen": "^4.2.4",
@@ -93,16 +65,6 @@
     "eslint-plugin-license-header": "^0.4.0",
     "eslint-plugin-unused-imports": "^2.0.0",
     "husky": "^7.0.4",
-    "jasmine": "~3.6.0",
-    "jasmine-core": "~3.6.0",
-    "jasmine-expect": "^5.0.0",
-    "karma": "~6.3.4",
-    "karma-chrome-launcher": "~3.1.0",
-    "karma-coverage": "~2.0.3",
-    "karma-jasmine": "~4.0.0",
-    "karma-jasmine-html-reporter": "^1.5.0",
-    "karma-mocha-reporter": "^2.2.5",
-    "karma-parallel": "^0.3.1",
     "lint-staged": "^12.3.2",
     "netlify-cli": "^9.13.0",
     "ng-packagr": "^12.0.6",
@@ -118,9 +80,7 @@
     "stylelint-config-recommended-scss": "^5.0.0",
     "stylelint-plugin-license-header": "1.0.3",
     "stylelint-scss": "4.1.0",
-    "ts-node": "~8.3.0",
-    "typescript": "~4.2.4",
-    "webpack": "^4.46.0"
+    "typescript": "~4.2.4"
   },
   "config": {
     "commitizen": {
