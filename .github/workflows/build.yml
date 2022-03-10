@@ -70,6 +70,11 @@ jobs:
           log="${log//$'\n'/%0A}"
           log="${log//$'\r'/%0D}"
           echo "::set-output name=log::$log"
+      - name: Deploy Demo Preview
+        env:
+          NETLIFY_SITE_ID: ${{secrets.NETLIFY_SITE_ID}}
+          NETLIFY_AUTH_TOKEN: ${{secrets.NETLIFY_AUTH_TOKEN}}
+        run: netlify deploy --alias ${{github.event.pull_request.number}}
       - name: Build Succeeded PR Comment
         uses: peter-evans/create-or-update-comment@v1
         with:
@@ -81,6 +86,7 @@ jobs:
             * 🙏 The Clarity team thanks you for opening a pull request
             * 🎉 The build for this PR has succeeded
             * 🔍 The PR is now ready for review
+            * 🍿 In the meantime, checkout out a [preview of this PR](https://${{github.event.pull_request.number}}--${{secrets.NETLIFY_SITE_NAME}}.netlify.app)
             * 🖐 You can always follow up here. If you're a VMware employee, you can also reach us on our [internal #clarity-support Slack channel](https://vmware-clarity.slack.com/archives/C0JF8D2LB)
 
             🚢 Merging this PR will produce the following release when the [Release GitHub Action](../actions/workflows/release.yml) is ran:
