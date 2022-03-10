@@ -6,6 +6,36 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
+      - name: Find Comment First
+        uses: peter-evans/find-comment@v1
+        id: find-comment-first
+        with:
+          issue-number: ${{github.event.pull_request.number}}
+          comment-author: 'github-actions[bot]'
+          body-includes: 🤖 Clarity Release Bot
+      - name: Build Started PR Comment
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          comment-id: ${{steps.find-comment-first.outputs.comment-id}}
+          issue-number: ${{github.event.pull_request.number}}
+          body: |
+            👋 @${{github.event.pull_request.user.login}},
+
+            * 🙏 The Clarity team thanks you for opening a pull request
+            * ⏳ The build for this PR has started
+            * 📫 I'll update this comment when the build has finished
+
+            Thank you,
+
+            🤖 Clarity Release Bot
+          edit-mode: replace
+      - name: Find Comment
+        uses: peter-evans/find-comment@v1
+        id: find-comment
+        with:
+          issue-number: ${{github.event.pull_request.number}}
+          comment-author: 'github-actions[bot]'
+          body-includes: 🤖 Clarity Release Bot
       # The next two steps are because when a branch in in maintenance mode the "Preview Release" step requires we be on the base branch, but reset to the PR SHA
       - name: Checkout
         uses: actions/checkout@v2
@@ -31,4 +61,55 @@ jobs:
       - name: Public Api Check
         run: npm run public-api:check
       - name: Preview Release
-        run: unset GITHUB_ACTIONS && npm run preview
+        id: preview-release
+        run: |
+          unset GITHUB_ACTIONS
+          log=$(npm run preview)
+          echo "echo $log"
+          log="$([[ $log == *"##"* ]] && echo "${log#*## }" || echo "This PR consists only of chores and will not trigger a release")"
+          log="${log//'    *'/*}"
+          log="${log//'%'/%25}"
+          log="${log//$'\n'/%0A}"
+          log="${log//$'\r'/%0D}"
+          echo "::set-output name=log::$log"
+      - name: Build Succeeded PR Comment
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          comment-id: ${{steps.find-comment.outputs.comment-id}}
+          issue-number: ${{github.event.pull_request.number}}
+          body: |
+            👋 @${{github.event.pull_request.user.login}},
+
+            * 🙏 The Clarity team thanks you for opening a pull request
+            * 🎉 The build for this PR has succeeded
+            * 🔍 The PR is now ready for review
+            * 🖐 You can always follow up here. If you're a VMware employee, you can also reach us on our [internal #clarity-support Slack channel](https://vmware-clarity.slack.com/archives/C0JF8D2LB)
+
+            🚢 Merging this PR will produce the following release when the [Release GitHub Action](../actions/workflows/release.yml) is ran:
+
+            ---
+
+            ${{steps.preview-release.outputs.log}}
+
+            ---
+
+            Thank you,
+
+            🤖 Clarity Release Bot
+          edit-mode: replace
+      - name: Build Failed PR Comment
+        if: ${{ failure() }}
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          comment-id: ${{steps.find-comment.outputs.comment-id}}
+          issue-number: ${{github.event.pull_request.number}}
+          body: |
+            👋 @${{github.event.pull_request.user.login}},
+
+            * 😭 The build for this PR has failed
+            * 🖐 You can always follow up here. If you're a VMware employee, you can also reach us on our [internal #clarity-support Slack channel](https://vmware-clarity.slack.com/archives/C0JF8D2LB)
+
+            Thank you,
+
+            🤖 Clarity Release Bot
+          edit-mode: replace
