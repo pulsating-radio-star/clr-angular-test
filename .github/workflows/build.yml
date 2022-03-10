@@ -1,17 +1,34 @@
 name: Build
-
-on: [push, pull_request]
-
+on:
+  pull_request:
 jobs:
   build:
+    name: Build
     runs-on: ubuntu-latest
-    if: github.repository == 'vmware/clarity'
-
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      # The next two steps are because when a branch in in maintenance mode the "Preview Release" step requires we be on the base branch, but reset to the PR SHA
+      - name: Checkout
+        uses: actions/checkout@v2
         with:
-          node-version: '14.x'
-      - uses: microsoft/playwright-github-action@v1
-      - run: npm install
-      - run: npm run build:ci
+          ref: ${{github.event.pull_request.base.ref}}
+          fetch-depth: 0
+      - name: Reset to SHA
+        run: git reset --hard ${{github.event.pull_request.head.sha}}
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version-file: '.nvmrc'
+      - name: Install npm
+        run: npm i -g npm@7.5.6
+      - name: Install Dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Build
+        run: npm run build
+      - name: Test
+        run: npm run test
+      - name: Public Api Check
+        run: npm run public-api:check
+      - name: Preview Release
+        run: unset GITHUB_ACTIONS && npm run preview
